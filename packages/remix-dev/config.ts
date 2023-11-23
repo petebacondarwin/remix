@@ -4,6 +4,7 @@ import { pathToFileURL } from "node:url";
 import fse from "fs-extra";
 import PackageJson from "@npmcli/package-json";
 import type { NodePolyfillsOptions as EsbuildPluginsNodeModulesPolyfillOptions } from "esbuild-plugins-node-modules-polyfill";
+import type { AppLoadContext } from "@remix-run/server-runtime";
 
 import type { RouteManifest, DefineRoutesFunction } from "./config/routes";
 import { defineRoutes } from "./config/routes";
@@ -187,6 +188,13 @@ export interface AppConfig {
     ? // Partial<FutureConfig> doesn't work when it's empty so just prevent any keys
       { [key: string]: never }
     : Partial<FutureConfig>;
+
+  /**
+   * The load context to use in dev mode is provided to the request handler.
+   *
+   * Adapters could set this to be used at dev time.
+   */
+  devLoadContext?: AppLoadContext;
 }
 
 /**
@@ -353,6 +361,8 @@ export interface RemixConfig {
   tsconfigPath: string | undefined;
 
   future: FutureConfig;
+
+  devLoadContext?: AppLoadContext;
 }
 
 /**
@@ -652,6 +662,7 @@ export async function resolveConfig(
     watchPaths,
     tsconfigPath,
     future,
+    devLoadContext: appConfig.devLoadContext,
   };
 }
 

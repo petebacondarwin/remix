@@ -7,7 +7,10 @@ import { splitCookiesString } from "set-cookie-parser";
 import { Readable } from "stream";
 import { File, FormData, Headers, Request as BaseNodeRequest } from "undici";
 import { type ServerBuild, installGlobals } from "@remix-run/node";
-import { createRequestHandler as createBaseRequestHandler } from "@remix-run/server-runtime";
+import {
+  type AppLoadContext,
+  createRequestHandler as createBaseRequestHandler,
+} from "@remix-run/server-runtime";
 
 installGlobals();
 
@@ -202,12 +205,15 @@ export let createRequestHandler = (
   }: {
     mode?: string;
     criticalCss?: string;
-  }
+  },
+  devLoadContext?: AppLoadContext
 ) => {
-  let handler = createBaseRequestHandler(build, mode);
+  let handler = createBaseRequestHandler(build, mode, devLoadContext);
   return async (req: IncomingMessage, res: ServerResponse) => {
     let request = createRequest(req);
-    let response = await handler(request, {}, { __criticalCss: criticalCss });
+    let response = await handler(request, {
+      __criticalCss: criticalCss,
+    });
     handleNodeResponse(response, res);
   };
 };

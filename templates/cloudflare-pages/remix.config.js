@@ -12,4 +12,10 @@ export default {
   // appDirectory: "app",
   // assetsBuildDirectory: "public/build",
   // publicPath: "/build/",
+  defaultLoadContext: {
+    // Example Cloudflare binding that could be made available to Remix
+    env: {
+      SOME_ENV: "some value",
+    },
+  },
 };

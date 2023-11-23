@@ -42,6 +42,7 @@ const supportedRemixConfigKeys = [
   "routes",
   "serverBuildPath",
   "serverModuleFormat",
+  "devLoadContext",
 ] as const satisfies ReadonlyArray<keyof RemixUserConfig>;
 type SupportedRemixConfigKey = typeof supportedRemixConfigKeys[number];
 type SupportedRemixConfig = Pick<RemixUserConfig, SupportedRemixConfigKey>;
@@ -83,6 +84,7 @@ type ResolvedRemixVitePluginConfig = Pick<
   | "routes"
   | "serverBuildPath"
   | "serverModuleFormat"
+  | "devLoadContext"
 >;
 
 let serverEntryId = VirtualModule.id("server-entry");
@@ -297,6 +299,7 @@ export const remixVitePlugin: RemixVitePlugin = (options = {}) => {
         serverBuildPath,
         serverModuleFormat,
         relativeAssetsBuildDirectory,
+        devLoadContext,
       } = await resolveConfig(config, { rootDirectory });
 
       return {
@@ -313,6 +316,7 @@ export const remixVitePlugin: RemixVitePlugin = (options = {}) => {
         future: {
           v3_fetcherPersist: options.future?.v3_fetcherPersist === true,
         },
+        devLoadContext,
       };
     };
 
@@ -757,15 +761,20 @@ export const remixVitePlugin: RemixVitePlugin = (options = {}) => {
           if (!vite.config.server.middlewareMode) {
             vite.middlewares.use(async (req, res, next) => {
               try {
+                let pluginConfig = await resolvePluginConfig();
                 let locals = localsByRequest.get(req);
                 invariant(locals, "No Remix locals found for request");
 
                 let { build, criticalCss } = locals;
 
-                let handle = createRequestHandler(build, {
-                  mode: "development",
-                  criticalCss,
-                });
+                let handle = createRequestHandler(
+                  build,
+                  {
+                    mode: "development",
+                    criticalCss,
+                  },
+                  pluginConfig.devLoadContext
+                );
 
                 await handle(req, res);
               } catch (error) {
